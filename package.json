@@ -1,0 +1,14 @@
+{
+  "name": "discord-public-bot",
+  "version": "4.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.2",
+    "dotenv": "^16.4.5",
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.1.1"
+  }
+}
