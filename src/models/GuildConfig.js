@@ -1,7 +1,13 @@
-const { Schema, model } = require('mongoose');
+const { Schema, model } = require("mongoose");
 
-module.exports = model('GuildConfig', new Schema({
+module.exports = model("GuildConfig", new Schema({
   guildId: String,
-  language: { type: String, default: 'id' },
-  antiLink: { type: Boolean, default: false }
+  language: { type: String, default: "id" },
+
+  // security
+  antiLink: { type: Boolean, default: false },
+
+  // welcome
+  welcomeChannel: String,
+  autoRole: String
 }));
