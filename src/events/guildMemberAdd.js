@@ -46,3 +46,49 @@ module.exports = {
     channel.send({ embeds: [embed] });
   }
 };
+
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const GuildConfig = require("../models/GuildConfig");
+const antiRaid = require("../utils/antiRaid");
+
+module.exports = {
+  name: "guildMemberAdd",
+  async execute(member) {
+    const cfg = await GuildConfig.findOne({ guildId: member.guild.id });
+    if (!cfg) return;
+
+    // 🛑 ANTI RAID
+    if (cfg.antiRaid) {
+      const raid = antiRaid(member.guild.id, cfg.raidLimit, cfg.raidTime);
+      if (raid) {
+        try {
+          await member.kick("Anti-Raid Protection");
+        } catch {}
+        return;
+      }
+    }
+
+    // 🔐 VERIFY SYSTEM
+    if (cfg.verifyEnabled && cfg.verifyChannel && cfg.verifyRole) {
+      const channel = member.guild.channels.cache.get(cfg.verifyChannel);
+      if (!channel) return;
+
+      const embed = new EmbedBuilder()
+        .setColor(0xffcc00)
+        .setTitle("🔐 Verifikasi")
+        .setDescription(
+          `Halo ${member}!\nKlik tombol di bawah untuk **verifikasi** dan membuka akses server.`
+        );
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("verify_user")
+          .setLabel("✅ Verify")
+          .setStyle(ButtonStyle.Success)
+      );
+
+      channel.send({ embeds: [embed], components: [row] });
+    }
+  }
+};
+
