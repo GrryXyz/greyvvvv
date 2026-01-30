@@ -4,10 +4,14 @@ module.exports = model("GuildConfig", new Schema({
   guildId: String,
   language: { type: String, default: "id" },
 
-  // security
   antiLink: { type: Boolean, default: false },
 
-  // welcome
   welcomeChannel: String,
-  autoRole: String
+  rulesChannel: String,
+
+  welcomeText: {
+    type: String,
+    default: "👋 Welcome {user} ke **{server}**!"
+  }
 }));
+
