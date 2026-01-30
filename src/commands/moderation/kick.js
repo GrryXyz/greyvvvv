@@ -1,82 +1,21 @@
-require("dotenv").config();
-const keepAlive = require("./keep_alive");
-const heroes = require("./heroes.json");
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
-const {
-  Client,
-  GatewayIntentBits,
-  Events,
-  SlashCommandBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder
-} = require("discord.js");
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("kick")
+    .setDescription("Kick member")
+    .addUserOption(o =>
+      o.setName("user").setDescription("Target").setRequired(true)
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
-});
+  async execute(i) {
+    const user = i.options.getUser("user");
+    const member = i.guild.members.cache.get(user.id);
 
-client.once(Events.ClientReady, async () => {
-  console.log(`✅ Bot online sebagai ${client.user.tag}`);
+    if (!member) return i.reply({ content: "User tidak ditemukan", ephemeral: true });
 
-  const command = new SlashCommandBuilder()
-    .setName("mlbb")
-    .setDescription("MLBB Bot Menu");
-
-  await client.application.commands.set([command]);
-});
-
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "mlbb") {
-      const embed = new EmbedBuilder()
-        .setTitle("🎮 MLBB BOT FULL")
-        .setDescription("Pilih menu di bawah")
-        .setColor(0xff0000);
-
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("hero")
-          .setLabel("Hero List")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId("tier")
-          .setLabel("Tier List")
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId("build")
-          .setLabel("Build Hero")
-          .setStyle(ButtonStyle.Danger)
-      );
-
-      await interaction.reply({ embeds: [embed], components: [row] });
-    }
+    await member.kick();
+    i.reply(`👢 ${user.tag} dikick`);
   }
-
-  if (interaction.isButton()) {
-    if (interaction.customId === "hero") {
-      const list = Object.keys(heroes).join(", ");
-      await interaction.reply({ content: `📜 **Hero MLBB:**\n${list}`, ephemeral: true });
-    }
-
-    if (interaction.customId === "tier") {
-      let text = "";
-      for (const h in heroes) {
-        text += `**${h.toUpperCase()}** — Tier ${heroes[h].tier}\n`;
-      }
-      await interaction.reply({ content: `🏆 **Tier List**\n${text}`, ephemeral: true });
-    }
-
-    if (interaction.customId === "build") {
-      let text = "";
-      for (const h in heroes) {
-        text += `**${h.toUpperCase()}**\n${heroes[h].build}\n\n`;
-      }
-      await interaction.reply({ content: `⚔️ **Build Hero**\n${text}`, ephemeral: true });
-    }
-  }
-});
-
-keepAlive();
-client.login(process.env.TOKEN);
+};
