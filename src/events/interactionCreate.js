@@ -1,27 +1,22 @@
+const GuildConfig = require("../models/GuildConfig");
+
 module.exports = {
-    name: "interactionCreate",
-    async execute(interaction) {
-      if (!interaction.isChatInputCommand()) return;
-  
-      const command = interaction.client.commands.get(interaction.commandName);
-      if (!command) return;
-  
-      try {
-        await command.execute(interaction);
-      } catch (err) {
-        console.error(err);
-  
-        if (interaction.replied || interaction.deferred) {
-          interaction.followUp({
-            content: "❌ Terjadi error saat menjalankan command",
-            ephemeral: true
-          });
-        } else {
-          interaction.reply({
-            content: "❌ Terjadi error saat menjalankan command",
-            ephemeral: true
-          });
-        }
-      }
-    }
-  };
+  name: "interactionCreate",
+  async execute(interaction) {
+    if (!interaction.isButton()) return;
+    if (interaction.customId !== "verify_user") return;
+
+    const cfg = await GuildConfig.findOne({ guildId: interaction.guild.id });
+    if (!cfg?.verifyRole) return;
+
+    const role = interaction.guild.roles.cache.get(cfg.verifyRole);
+    if (!role) return;
+
+    await interaction.member.roles.add(role);
+
+    interaction.reply({
+      content: "✅ Kamu berhasil diverifikasi!",
+      ephemeral: true
+    });
+  }
+};
