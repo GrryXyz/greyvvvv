@@ -4,10 +4,23 @@ const GuildConfig = require("../../models/GuildConfig");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("antiraid")
-    .setDescription("Setup anti raid")
-    .addBooleanOption(o => o.setName("status").setRequired(true))
-    .addIntegerOption(o => o.setName("limit").setDescription("join"))
-    .addIntegerOption(o => o.setName("time").setDescription("detik"))
+    .setDescription("Setup sistem anti raid")
+    .addBooleanOption(o =>
+      o
+        .setName("status")
+        .setDescription("Aktifkan atau matikan anti raid")
+        .setRequired(true)
+    )
+    .addIntegerOption(o =>
+      o
+        .setName("limit")
+        .setDescription("Jumlah join untuk trigger raid")
+    )
+    .addIntegerOption(o =>
+      o
+        .setName("time")
+        .setDescription("Waktu (detik)")
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   async execute(interaction) {
@@ -24,6 +37,7 @@ module.exports = {
       }
     );
 
-    await interaction.editReply("🛡️ Anti-raid diperbarui.");
+    await interaction.editReply("🛡️ Anti-raid berhasil diperbarui.");
   }
 };
+
