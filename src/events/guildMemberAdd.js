@@ -1,5 +1,6 @@
 const { EmbedBuilder, time } = require("discord.js");
 const GuildConfig = require("../models/GuildConfig");
+const antiRaid = require("../utils/antiRaid");
 
 function accountAge(date) {
   const days = Math.floor((Date.now() - date.getTime()) / 86400000);
@@ -43,19 +44,6 @@ module.exports = {
       })
       .setTimestamp();
 
-    channel.send({ embeds: [embed] });
-  }
-};
-
-const GuildConfig = require("../models/GuildConfig");
-const antiRaid = require("../utils/antiRaid");
-
-module.exports = {
-  name: "guildMemberAdd",
-  async execute(member) {
-    const cfg = await GuildConfig.findOne({ guildId: member.guild.id });
-    if (!cfg) return;
-
     // 🛑 ANTI RAID
     if (cfg.antiRaid) {
       const raid = antiRaid(member.guild.id, cfg.raidLimit, cfg.raidTime);
@@ -90,4 +78,7 @@ module.exports = {
     }
   }
 };
+
+
+    
 
