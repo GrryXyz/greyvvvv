@@ -14,8 +14,11 @@ module.exports = model("GuildConfig", new Schema({
 
   // anti raid
   antiRaid: { type: Boolean, default: true },
-  raidLimit: { type: Number, default: 5 }, // join
-  raidTime: { type: Number, default: 10 }, // detik
+  raidLimit: { type: Number, default: 5 },   // jumlah join
+  raidTime: { type: Number, default: 10 },   // detik
+  raidLockTime: { type: Number, default: 120 }, // detik lock
+  logChannel: String,
+
 
   // verify
   verifyEnabled: { type: Boolean, default: true },
