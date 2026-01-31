@@ -5,8 +5,8 @@ module.exports = {
   once: true,
   execute(client) {
     const activities = [
-      { name: "server publik 🚀", type: ActivityType.Watching },
-      { name: "/help | bot publik", type: ActivityType.Playing },
+      { name: "NexusGy | By Grry 🚀", type: ActivityType.Watching },
+      { name: "/help | NexusGy", type: ActivityType.Playing },
       { name: "anti raid & verify", type: ActivityType.Listening }
     ];
 
