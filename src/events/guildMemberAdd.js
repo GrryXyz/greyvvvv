@@ -45,16 +45,48 @@ module.exports = {
       .setTimestamp();
 
     // 🛑 ANTI RAID
-    if (cfg.antiRaid) {
-      const raid = antiRaid(member.guild.id, cfg.raidLimit, cfg.raidTime);
-      if (raid) {
-        try {
-          await member.kick("Anti-Raid Protection");
-        } catch {}
-        return;
+    if (!cfg?.antiRaid) return;
+
+    const isRaid = antiRaid(
+      member.guild.id,
+      cfg.raidLimit || 5,
+      cfg.raidTime || 10
+    );
+
+    if (!isRaid) return;
+
+    // Kick member yang baru join
+    await member.kick("Anti-Raid: mass join").catch(() => {});
+
+    // Lock server (deny send message)
+    const everyone = member.guild.roles.everyone;
+    await everyone.setPermissions(
+      everyone.permissions.remove(PermissionFlagsBits.SendMessages)
+    ).catch(() => {});
+
+    // Log
+    if (cfg.logChannel) {
+      const log = member.guild.channels.cache.get(cfg.logChannel);
+      if (log) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setTitle("🛑 Anti-Raid Aktif")
+          .setDescription(
+            `Mass join terdeteksi.\nServer dikunci **${cfg.raidLockTime || 120}s**`
+          )
+          .setTimestamp();
+        log.send({ embeds: [embed] }).catch(() => {});
       }
     }
 
+    // Auto unlock
+    setTimeout(async () => {
+      await everyone.setPermissions(
+        everyone.permissions.add(PermissionFlagsBits.SendMessages)
+      ).catch(() => {});
+    }, (cfg.raidLockTime || 120) * 1000);
+  }
+  
     // 🔐 VERIFY SYSTEM
     if (cfg.verifyEnabled && cfg.verifyChannel && cfg.verifyRole) {
       const channel = member.guild.channels.cache.get(cfg.verifyChannel);
