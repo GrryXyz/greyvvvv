@@ -1,38 +1,28 @@
-const {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
-  MessageFlags
-} = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const GuildConfig = require("../../models/GuildConfig");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setverify")
-    .setDescription("Set role verifikasi")
+    .setDescription("Setup verify system")
+    .addChannelOption(o =>
+      o.setName("channel").setDescription("Verify channel").setRequired(true)
+    )
     .addRoleOption(o =>
-      o.setName("role")
-        .setDescription("Role verified")
-        .setRequired(true)
+      o.setName("role").setDescription("Verified role").setRequired(true)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
-  async execute(interaction) {
-    // 🔒 DEFER SEKALI
-    await interaction.deferReply({
-      flags: MessageFlags.Ephemeral
-    });
-
-    const role = interaction.options.getRole("role");
-
+  async execute(i) {
     await GuildConfig.findOneAndUpdate(
-      { guildId: interaction.guild.id },
-      { verifyRole: role.id },
-      { upsert: true }
+      { guildId: i.guild.id },
+      {
+        verifyChannel: i.options.getChannel("channel").id,
+        verifyRole: i.options.getRole("role").id,
+        verifyEnabled: true
+      }
     );
 
-    // ✅ EDIT REPLY (BUKAN reply lagi)
-    await interaction.editReply(
-      `✅ Role verifikasi diset ke **${role.name}**`
-    );
+    i.reply({ content: "🔐 Verify system aktif", ephemeral: true });
   }
 };
