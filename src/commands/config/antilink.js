@@ -1,17 +1,43 @@
-const { SlashCommandBuilder } = require('discord.js');
-const GuildConfig = require('../../models/GuildConfig');
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  MessageFlags
+} = require("discord.js");
+const GuildConfig = require("../../models/GuildConfig");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('antilink')
-    .setDescription('Toggle anti link')
-    .addBooleanOption(o => o.setName('status').setDescription('on/off').setRequired(true)),
-  async execute(i) {
-    const status = i.options.getBoolean('status');
+    .setName("antilink")
+    .setDescription("Aktif/nonaktifkan anti link")
+    .addStringOption(o =>
+      o.setName("mode")
+        .setDescription("on / off")
+        .setRequired(true)
+        .addChoices(
+          { name: "ON", value: "on" },
+          { name: "OFF", value: "off" }
+        )
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+  async execute(interaction) {
+    // 🔒 DEFER SEKALI
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral
+    });
+
+    const mode = interaction.options.getString("mode");
+    const status = mode === "on";
+
     await GuildConfig.findOneAndUpdate(
-      { guildId: i.guild.id },
-      { antiLink: status }
+      { guildId: interaction.guild.id },
+      { antiLink: status },
+      { upsert: true }
     );
-    i.reply(status ? '🛡️ Anti link aktif' : '❌ Anti link mati');
+
+    // ✅ EDIT REPLY (BUKAN reply lagi)
+    await interaction.editReply(
+      `🔗 Anti-link **${status ? "AKTIF" : "NONAKTIF"}**`
+    );
   }
 };
