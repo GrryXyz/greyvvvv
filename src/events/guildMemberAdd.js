@@ -47,7 +47,6 @@ module.exports = {
   }
 };
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const GuildConfig = require("../models/GuildConfig");
 const antiRaid = require("../utils/antiRaid");
 
