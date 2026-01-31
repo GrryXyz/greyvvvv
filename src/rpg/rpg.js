@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const RpgUser = require("../../models/RpgUser");
+const RpgUser = require("../../models/User");
 
 function progressBar(current, max, size = 10) {
   const filled = Math.round((current / max) * size);
