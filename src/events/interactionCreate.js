@@ -1,49 +1,55 @@
+const { MessageFlags } = require("discord.js");
 const GuildConfig = require("../models/GuildConfig");
 
 module.exports = {
   name: "interactionCreate",
   async execute(interaction) {
-    try {
-      if (interaction.isChatInputCommand()) {
-        const command = interaction.client.commands.get(
-          interaction.commandName
-        );
 
-        if (!command) return;
+    /* ================= SLASH COMMAND ================= */
+    if (interaction.isChatInputCommand()) {
+      const command = interaction.client.commands.get(
+        interaction.commandName
+      );
+      if (!command) return;
 
-        await interaction.deferReply({ ephemeral: true });
-        return command.execute(interaction); // ⬅️ command WAJIB editReply
+      try {
+        await command.execute(interaction);
+      } catch (err) {
+        console.error(err);
+
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: "❌ Terjadi kesalahan",
+            flags: MessageFlags.Ephemeral
+          });
+        }
       }
+    }
 
-      if (interaction.isButton()) {
-        if (interaction.customId !== "verify_user") return;
+    /* ================= VERIFY BUTTON ================= */
+    if (interaction.isButton()) {
+      if (interaction.customId !== "verify_user") return;
 
-        await interaction.deferReply({ ephemeral: true });
-
+      try {
         const cfg = await GuildConfig.findOne({
           guildId: interaction.guild.id
         });
 
         if (!cfg?.verifyRole) {
-          return interaction.editReply("❌ Verify role belum diset.");
+          return interaction.reply({
+            content: "❌ Verify role belum diset",
+            flags: MessageFlags.Ephemeral
+          });
         }
 
-        const role = interaction.guild.roles.cache.get(cfg.verifyRole);
-        if (!role) {
-          return interaction.editReply("❌ Role tidak ditemukan.");
-        }
+        await interaction.member.roles.add(cfg.verifyRole);
 
-        if (interaction.member.roles.cache.has(role.id)) {
-          return interaction.editReply("✅ Kamu sudah terverifikasi.");
-        }
-
-        await interaction.member.roles.add(role);
-        return interaction.editReply("🎉 Verifikasi berhasil!");
-      }
-    } catch (err) {
-      console.error("interactionCreate error:", err);
-      if (interaction.deferred) {
-        interaction.editReply("❌ Terjadi error.");
+        await interaction.reply({
+          content: "✅ Kamu berhasil diverifikasi!",
+          flags: MessageFlags.Ephemeral
+        });
+      } catch (e) {
+        console.error(e);
       }
     }
   }
