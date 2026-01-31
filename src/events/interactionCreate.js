@@ -4,22 +4,17 @@ module.exports = {
   name: "interactionCreate",
   async execute(interaction) {
     try {
-      /* ================= SLASH COMMAND ================= */
       if (interaction.isChatInputCommand()) {
-        await interaction.deferReply({ ephemeral: true });
-
         const command = interaction.client.commands.get(
           interaction.commandName
         );
 
-        if (!command) {
-          return interaction.editReply("❌ Command tidak ditemukan.");
-        }
+        if (!command) return;
 
-        await command.execute(interaction);
+        await interaction.deferReply({ ephemeral: true });
+        return command.execute(interaction); // ⬅️ command WAJIB editReply
       }
 
-      /* ================= BUTTON VERIFY ================= */
       if (interaction.isButton()) {
         if (interaction.customId !== "verify_user") return;
 
@@ -43,18 +38,13 @@ module.exports = {
         }
 
         await interaction.member.roles.add(role);
-
-        return interaction.editReply(
-          "🎉 Verifikasi berhasil! Selamat datang."
-        );
+        return interaction.editReply("🎉 Verifikasi berhasil!");
       }
     } catch (err) {
       console.error("interactionCreate error:", err);
-
-      if (interaction.deferred || interaction.replied) {
-        interaction.editReply("❌ Terjadi error internal.");
+      if (interaction.deferred) {
+        interaction.editReply("❌ Terjadi error.");
       }
     }
   }
 };
-
