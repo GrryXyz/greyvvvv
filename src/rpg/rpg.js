@@ -1,82 +1,63 @@
-require("dotenv").config();
-const keepAlive = require("./keep_alive");
-const heroes = require("./heroes.json");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const RpgUser = require("../../models/RpgUser");
 
-const {
-  Client,
-  GatewayIntentBits,
-  Events,
-  SlashCommandBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder
-} = require("discord.js");
+function progressBar(current, max, size = 10) {
+  const filled = Math.round((current / max) * size);
+  return "🟩".repeat(filled) + "⬛".repeat(size - filled);
+}
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
-});
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("rpg")
+    .setDescription("Lihat profile RPG kamu"),
 
-client.once(Events.ClientReady, async () => {
-  console.log(`✅ Bot online sebagai ${client.user.tag}`);
+  async execute(interaction) {
+    let user = await RpgUser.findOne({
+      userId: interaction.user.id,
+      guildId: interaction.guild.id
+    });
 
-  const command = new SlashCommandBuilder()
-    .setName("mlbb")
-    .setDescription("MLBB Bot Menu");
-
-  await client.application.commands.set([command]);
-});
-
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "mlbb") {
-      const embed = new EmbedBuilder()
-        .setTitle("🎮 MLBB BOT FULL")
-        .setDescription("Pilih menu di bawah")
-        .setColor(0xff0000);
-
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("hero")
-          .setLabel("Hero List")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId("tier")
-          .setLabel("Tier List")
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId("build")
-          .setLabel("Build Hero")
-          .setStyle(ButtonStyle.Danger)
-      );
-
-      await interaction.reply({ embeds: [embed], components: [row] });
+    if (!user) {
+      user = await RpgUser.create({
+        userId: interaction.user.id,
+        guildId: interaction.guild.id
+      });
     }
+
+    const needExp = user.level * 100;
+
+    const embed = new EmbedBuilder()
+      .setColor(0x7cffcb)
+      .setTitle("🧙 RPG PROFILE")
+      .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+      .setDescription(
+        `**${interaction.user.username}**\n` +
+        `Petualang dari **${interaction.guild.name}**`
+      )
+      .addFields(
+        {
+          name: "⭐ Level",
+          value: `${user.level}`,
+          inline: true
+        },
+        {
+          name: "💰 Gold",
+          value: `${user.gold}`,
+          inline: true
+        },
+        {
+          name: "📈 EXP",
+          value:
+            `${user.exp} / ${needExp}\n` +
+            progressBar(user.exp, needExp),
+          inline: false
+        }
+      )
+      .setFooter({
+        text: "RPG System • Bot Publik"
+      })
+      .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
   }
-
-  if (interaction.isButton()) {
-    if (interaction.customId === "hero") {
-      const list = Object.keys(heroes).join(", ");
-      await interaction.reply({ content: `📜 **Hero MLBB:**\n${list}`, ephemeral: true });
-    }
-
-    if (interaction.customId === "tier") {
-      let text = "";
-      for (const h in heroes) {
-        text += `**${h.toUpperCase()}** — Tier ${heroes[h].tier}\n`;
-      }
-      await interaction.reply({ content: `🏆 **Tier List**\n${text}`, ephemeral: true });
-    }
-
-    if (interaction.customId === "build") {
-      let text = "";
-      for (const h in heroes) {
-        text += `**${h.toUpperCase()}**\n${heroes[h].build}\n\n`;
-      }
-      await interaction.reply({ content: `⚔️ **Build Hero**\n${text}`, ephemeral: true });
-    }
-  }
-});
-
-keepAlive();
-client.login(process.env.TOKEN);
+};
